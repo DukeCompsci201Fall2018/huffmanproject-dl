@@ -124,11 +124,11 @@ public class HuffProcessor {
 	private int[] readForCounts(BitInputStream in) {
 		// TODO Auto-generated method stub
 		int[] re = new int[ALPH_SIZE + 1];
-		//for(int i = 0; i < (ALPH_SIZE + 1); i++) {
 		while(true) {
 			int bit = in.readBits(BITS_PER_WORD);
 			if(bit == -1) {
-				throw new HuffException("bad input, no PESUDO_EOF");
+				//throw new HuffException("bad input, no PESUDO_EOF");
+				break;
 			}
 			if(bit == PSEUDO_EOF) {
 				break;
