@@ -49,24 +49,8 @@ public class HuffProcessor {
 		}
 		out.close();
 	}
-	/**
-	 * Decompresses a file. Output file must be identical bit-by-bit to the
-	 * original.
-	 *
-	 * @param in
-	 *            Buffered bit stream of the file to be decompressed.
-	 * @param out
-	 *            Buffered bit stream writing to the output file.
-	 */
-	public void compress(BitInputStream in, BitOutputStream out){
 
-		while (true){
-			int val = in.readBits(BITS_PER_WORD);
-			if (val == -1) break;
-			out.writeBits(BITS_PER_WORD, val);
-		}
-		out.close();
-	}
+
 	/**
 	 * Decompresses a file. Output file must be identical bit-by-bit to the
 	 * original.
@@ -110,7 +94,7 @@ public class HuffProcessor {
 						break;
 					}
 					else {
-						out.writeBits(BITS_PER_WORD, current.myValue);
+						out.writeBits(BITS_PER_WORD , current.myValue);
 						current = root;
 						
 					}
