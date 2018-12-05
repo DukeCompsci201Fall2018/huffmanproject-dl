@@ -1,3 +1,4 @@
+import java.util.PriorityQueue;
 
 /**
  * Although this class has a history of several years,
@@ -42,14 +43,103 @@ public class HuffProcessor {
 	 */
 	public void compress(BitInputStream in, BitOutputStream out){
 
-		while (true){
-			int val = in.readBits(BITS_PER_WORD);
-			if (val == -1) break;
-			out.writeBits(BITS_PER_WORD, val);
-		}
+		int[] counts = readForCounts(in);
+		HuffNode root = makeTreeFromCounts(counts);
+		String[] codings = makeCodingsFromTree(root);
+		
+		out.writeBits(BITS_PER_INT, HUFF_TREE);
+		writeHeader(root,out);
+		
+		in.reset();
+		writeCompressedBits(codings,in,out);
 		out.close();
 	}
 
+
+	private void writeCompressedBits(String[] codings, BitInputStream in, BitOutputStream out) {
+		// TODO Auto-generated method stub
+		for(int i = 0; i < codings.length; i++) {
+			String code = codings[i];
+			out.writeBits(code.length(), Integer.parseInt(code,2));
+		}
+		
+	}
+
+	private void writeHeader(HuffNode root, BitOutputStream out) {
+		// TODO Auto-generated method stub
+	
+		if(root.myLeft!=null || root.myRight!=null) {
+			out.writeBits(BITS_PER_WORD + 1, 0);
+			writeHeader(root.myLeft, out);
+			writeHeader(root.myRight, out);
+		}
+		if(root.myLeft== null && root.myRight==null) {
+			out.writeBits(BITS_PER_WORD + 1, 1);
+		}
+		
+		
+	}
+
+	private String[] makeCodingsFromTree(HuffNode root) {
+		// TODO Auto-generated method stub
+		 //returns an array of strings such that a[val] is the encoding of the 8 bit chunk val. 
+		//the recursive helper method will have the array of enocdings as one paramter, a node that is the root of the subtree as another parameter, 
+		//and a strfing that is the path to that node 
+		
+		String[] encodings = new String[ALPH_SIZE+1];
+		codingHelper(root, "", encodings);
+		return encodings;
+	}
+
+	private void codingHelper(HuffNode root, String string, String[] encodings) {
+		// TODO Auto-generated method stub
+		if(root.myRight==null && root.myLeft==null) {
+			encodings[root.myValue] = string;
+			return;
+		}
+		codingHelper(root.myLeft, string + "0", encodings);
+		codingHelper(root.myRight, string + "1", encodings);
+		
+	}
+
+	private HuffNode makeTreeFromCounts(int[] counts) {
+		// TODO Auto-generated method stub
+		PriorityQueue<HuffNode> pq = new PriorityQueue<>();
+		
+		for(int i = 0; counts[i] > 0 && i<counts.length; i++) {
+			pq.add(new HuffNode(i, counts[i], null, null));
+		}
+		
+		while(pq.size() > 1) {
+			HuffNode left = pq.remove();
+			HuffNode right = pq.remove();
+			//create new HuffNode t with weight from left.weight+right.weight and left, right subtress
+			HuffNode t = new HuffNode(0,left.myWeight+right.myWeight, left, right);
+			pq.add(t);
+		}
+		HuffNode root = pq.remove();
+		return root;
+	}
+
+	private int[] readForCounts(BitInputStream in) {
+		// TODO Auto-generated method stub
+		int[] re = new int[ALPH_SIZE + 1];
+		//for(int i = 0; i < (ALPH_SIZE + 1); i++) {
+		while(true) {
+			int bit = in.readBits(BITS_PER_WORD);
+			if(bit == -1) {
+				throw new HuffException("bad input, no PESUDO_EOF");
+			}
+			if(bit == PSEUDO_EOF) {
+				break;
+			}
+			else {
+				re[bit] = re[bit] + 1;
+			}
+		}
+		re[PSEUDO_EOF] = 1;
+		return re;
+	}
 
 	/**
 	 * Decompresses a file. Output file must be identical bit-by-bit to the
