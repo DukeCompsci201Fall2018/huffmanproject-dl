@@ -63,15 +63,19 @@ public class HuffProcessor {
 		while(true) {
 			int bit = in.readBits(BITS_PER_WORD);
 			if(bit == -1) {
+				String code = codings[PSEUDO_EOF];
+				out.writeBits(code.length(), Integer.parseInt(code,2));
 				break;
 			}
-			else {
+			else{
 				String code = codings[bit];
+				if(code == null || out==null) {
+					break;
+				}
 				out.writeBits(code.length(), Integer.parseInt(code,2));
 			}
 		}
-		String code = codings[PSEUDO_EOF];
-		out.writeBits(code.length(), Integer.parseInt(code,2));
+		
 		
 		
 	}
